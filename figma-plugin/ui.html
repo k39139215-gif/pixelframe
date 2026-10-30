@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 28px;
+      background: #111318;
+      color: #f3f3f6;
+      font:
+        13px Inter,
+        system-ui;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+    header b {
+      font-size: 20px;
+      letter-spacing: -0.7px;
+    }
+    header span {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #acb0be;
+    }
+    h1 {
+      font-size: 31px;
+      line-height: 1.12;
+      letter-spacing: -1.2px;
+      font-weight: 550;
+    }
+    p {
+      line-height: 1.7;
+      color: #a4a8b8;
+    }
+    .upload {
+      display: block;
+      border: 1px dashed #696088;
+      border-radius: 14px;
+      background: #ae96fb09;
+      padding: 20px;
+      margin: 24px 0;
+    }
+    input[type="file"] {
+      display: block;
+      max-width: 100%;
+      margin-top: 12px;
+    }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 14px;
+      background: #c8b3ff;
+      font-weight: 650;
+      color: #251c38;
+      cursor: pointer;
+      transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.2, 1.2);
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+    }
+    #status {
+      white-space: pre-wrap;
+      max-height: 130px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 18px;
+      color: #c6c8d5;
+    }
+    label.ref {
+      display: block;
+      font-size: 12px;
+      color: #b4b8c7;
+      margin-bottom: 20px;
+    }
+    small {
+      display: block;
+      color: #858999;
+      margin-top: 22px;
+    }
+    #report {
+      margin-top: 12px;
+      background: #26232f;
+      color: #dacaff;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+      }
+    }
+  </style>
+  <header><b>◈ pixelframe</b><span>IMAGE → FIGMA</span></header>
+  <h1>Your pixels.<br />Room to edit.</h1>
+  <p>
+    Import the package from Pixelframe. Each screenshot becomes a frame on your
+    current page.
+  </p>
+  <label class="upload"
+    >Choose image reconstruction package<input
+      id="file"
+      type="file"
+      accept=".json,application/json" /></label
+  ><label class="ref">Text imports as visible editable layers</label
+  ><button id="import" disabled>Import frames ↗</button>
+  <div id="status" role="status" aria-live="polite">No package selected.</div>
+  <details><summary>Font resolution before import</summary><div id="font-report" style="max-height:140px;overflow:auto;font-size:11px;line-height:1.6"></div></details>
+  <button id="report" hidden>Download report</button
+  ><button id="preview" hidden>Download Figma PNG</button><small>Local import · separate from Siteframe</small>
+  <script>
+    let text = "",
+      busy = false;
+    const file = document.querySelector("#file"),
+      button = document.querySelector("#import"),
+      status = document.querySelector("#status");
+    file.onchange = async () => {
+      text = "";
+      button.disabled = true;
+      const f = file.files[0];
+      if (!f) return;
+      if (f.size > 80000000) {
+        status.textContent = "Package exceeds 80 MB.";
+        return;
+      }
+      try {
+        text = await f.text();
+        const p = JSON.parse(text);
+        if (p.format !== "pixelframe")
+          throw Error("Choose a Pixelframe package.");
+        status.textContent = f.name;
+        button.disabled = false;
+      } catch (e) {
+        status.textContent = e.message;
+      }
+    };
+    button.onclick = () => {
+      if (busy) return;
+      busy = true;
+      file.disabled = true;
+      button.disabled = true;
+      parent.postMessage(
+        {
+          pluginMessage: {
+            type: "import",
+            text,
+
+          },
+        },
+        "*",
+      );
+    };
+    window.onmessage = (e) => {
+      const m = e.data.pluginMessage;
+      if (!m) return;
+      if (m.type === "preview") {
+        const url = URL.createObjectURL(new Blob([new Uint8Array(m.bytes)], {type:"image/png"}));
+        const a = document.createElement("a");a.href=url;a.download="pixelframe-figma.png";a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+      }
+      if (m.type === "font-report") {
+        const container=document.querySelector('#font-report');container.replaceChildren();
+        for(const font of m.report){const line=document.createElement('div');line.textContent=`${font.exact?'Exact':'Substitute'}: ${font.requested} → ${font.resolved} (${font.reason})`;container.append(line);}
+      }
+      if (m.type === "progress") status.textContent = m.text;
+      if (m.type === "error" || m.type === "complete") {
+        busy = false;
+        file.disabled = false;
+        button.disabled = !text;
+        if (m.type === "error") status.textContent = m.text;
+        else {
+          const r = m.report;
+          status.textContent =
+            r.screens +
+            " frames · " +
+            r.textNodes +
+            " text layers · " +
+            r.shapes +
+            " shapes · " +
+            r.images +
+            " image regions\n" +
+            r.fontSubstitutions.length +
+            " font substitutions. " + (r.skippedLayers?.length??0) + " skipped layers. " + (r.reviewText?.length??0) + " text layers need review. " +
+            r.hiddenTextCandidates +
+            " hidden text layers. Text is visible and editable; compare fonts against the source.";
+          const b = document.querySelector("#report");
+          const preview = document.querySelector("#preview");preview.hidden=false;
+          preview.onclick=()=>parent.postMessage({pluginMessage:{type:"export-preview"}},"*");
+          b.hidden = false;
+          b.onclick = () => {
+            const url = URL.createObjectURL(
+              new Blob([JSON.stringify(r, null, 2)], {
+                type: "application/json",
+              }),
+            );
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "pixelframe-import-report.json";
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          };
+        }
+      }
+    };
+  </script>
+</html>

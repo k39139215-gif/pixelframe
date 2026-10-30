@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pixelframe — Image to Figma</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="brand" href="index.html">◈ pixelframe</a
+        ><span class="pill">ON YOUR DEVICE</span
+        ><span class="header-note">Screenshot → editable Figma</span>
+      </header>
+      <section class="intro">
+        <div>
+          <span class="eyebrow">A NEW START FOR YOUR SCREENSHOTS</span>
+          <h1>From pixels.<br /><span>To possibilities.</span></h1>
+          <p>
+            Bring text, simple shapes and image regions into Figma.<br />Compare
+            the reconstruction before you export.
+          </p>
+        </div>
+        <label id="drop" class="drop"
+          ><span class="upload-icon">↥</span
+          ><strong>Drop your screenshots here</strong
+          ><span>PNG, JPG or WebP · up to 8 images · 25 MB each</span
+          ><input
+            id="files"
+            type="file"
+            multiple
+            accept="image/png,image/jpeg,image/webp"
+          /><span class="browse">Choose images</span></label
+        >
+      </section>
+      <div class="toolbar">
+        <div id="selection">No screenshots selected</div>
+        <div class="actions">
+          <button id="cancel" hidden>Cancel</button
+          ><button id="convert" class="primary" disabled>
+            Reconstruct images <span>↗</span>
+          </button>
+        </div>
+      </div>
+      <p id="status" role="status" aria-live="polite">
+        English text recognition is included. Images stay on this device.
+      </p>
+      <section id="workspace" hidden>
+        <div class="workspace-head">
+          <div id="tabs" role="tablist" aria-label="Screenshots"></div>
+          <button id="export" class="primary">Export Figma package ↓</button>
+        </div>
+        <div id="stats" class="stats"></div>
+        <div class="compare-head">
+          <strong>Compare the result</strong
+          ><label
+            >Original overlay
+            <input id="overlay" type="range" min="0" max="100" value="0" />
+            <span id="overlay-value">0%</span></label
+          >
+        </div>
+        <div class="previews">
+          <section>
+            <div class="caption">ORIGINAL</div>
+            <div id="source-preview" class="preview"></div>
+          </section>
+          <section>
+            <div class="caption">
+              RECONSTRUCTION
+              <span>Browser preview · Figma fonts may differ</span>
+            </div>
+            <div id="result-preview" class="preview"></div>
+          </section>
+        </div>
+        <div class="review">
+          <section>
+            <h2>Fonts detected</h2>
+            <div id="font-groups"></div>
+            <p id="font-width-warning" role="status"></p>
+            <h2>Text you can edit</h2>
+            <p>
+              Every detected text layer is visible and editable. Review OCR wording and font matches in the preview. Adjust font, weight, tracking and colour below. You can type any installed font name.
+            </p>
+            <div id="text-list"></div>
+            <datalist id="font-options"></datalist>
+          </section>
+          <aside>
+            <h2>Before you import</h2>
+            <ol>
+              <li>Compare the original with the preview.</li>
+              <li>Export the package.</li>
+              <li>
+                Run <b>Pixelframe — Editable Image Import</b> in Figma and
+                select it.
+              </li>
+            </ol>
+            <p>
+              Each screenshot becomes a separate frame on your current Figma
+              page. Compare against the source in this studio before importing.
+            </p>
+            <details open>
+              <summary>Reconstruction notes</summary>
+              <ul id="notes"></ul>
+            </details>
+          </aside>
+        </div>
+      </section>
+      <footer>
+        <span>Separate from Siteframe. No website permissions or API key.</span
+        ><span>Photos and unsupported details remain image layers.</span>
+      </footer>
+    </main>
+    <script src="app.js" defer></script>
+  </body>
+</html>

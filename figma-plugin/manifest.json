@@ -1,0 +1,10 @@
+{
+  "name": "Pixelframe — Editable Image Import",
+  "id": "1591501000000000002",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] }
+}
